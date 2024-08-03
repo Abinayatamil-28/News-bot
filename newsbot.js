@@ -11,6 +11,7 @@ const NEWS_API_URL = 'https://newsapi.org/v2/everything';
 // Function to fetch news from NewsAPI
 async function fetchNews(keyword) {
   try {
+    console.log(`Fetching news for keyword: ${keyword}`); // Log the keyword used for the request
     const response = await axios.get(NEWS_API_URL, {
       params: {
         q: keyword,
@@ -18,9 +19,10 @@ async function fetchNews(keyword) {
         language: 'en'
       }
     });
+    console.log('API Response:', response.data); // Log the full API response
     return response.data.articles;
   } catch (error) {
-    console.error('Error fetching news:', error);
+    console.error('Error fetching news:', error.message); // Log specific error message
     return [];
   }
 }
@@ -64,6 +66,7 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ articles: newsArticles }));
       } catch (error) {
+        console.error('Error processing request:', error.message); // Log error during request processing
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Invalid JSON' }));
       }
