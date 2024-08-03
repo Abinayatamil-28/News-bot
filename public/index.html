@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Bot</title>
+    <link rel="icon" href="https://reactheme.com/products/html/echooling/assets/images/logo2.png" type="image/png">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            padding: 0;
+            background-color: white;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        h1 {
+            text-align: center;
+            color: rgb(122, 2, 122);
+            margin-bottom: 20px;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+        }
+        #chatContainer {
+            width: 100%;
+            max-width: 600px;
+            background:rgb(236, 234, 234);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+            max-height: 800px;
+        }
+        #chatBox {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        #userInputContainer {
+            display: flex;
+        }
+        #userInput {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-top: 1px solid #ddd;
+            border-radius: 0 0 0 10px;
+            width: calc(100% - 60px);
+            outline: none;
+        }
+        #sendButton {
+            padding: 10px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 0 0 10px 0;
+            cursor: pointer;
+            height: 100%;
+            width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #sendButton:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+            clear: both;
+            position: relative;
+            font-family:Georgia, 'Times New Roman', Times, serif
+        }
+        .message.bot {
+            background: #f5cf88;
+            align-self: flex-start;
+            margin-right: auto;
+        }
+        .message.user {
+            background: #007bff;
+            color: #fff;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .message p {
+            margin: 5px;
+            padding:5px;
+        }
+        .message h2 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+        .message a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .message a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            #userInput {
+                width: calc(100% - 60px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>News Bot</h1>
+    <div id="chatContainer">
+        <div id="chatBox">
+            <div class="message bot">
+                <p>Hi! I'm Hydie, your news bot. Enter a keyword to get the latest news.</p>
+            </div>
+        </div>
+        <div id="userInputContainer">
+            <input type="text" id="userInput" placeholder="Enter a keyword..." required aria-required="true">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('sendButton').addEventListener('click', async () => {
+            const userInput = document.getElementById('userInput');
+            const chatBox = document.getElementById('chatBox');
+            
+            if (!userInput.value.trim()) return;
+
+            // Add user message to chat
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user';
+            userMessage.innerHTML = `<p>${userInput.value}</p>`;
+            chatBox.appendChild(userMessage);
+            userInput.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Show loading message
+            const loadingMessage = document.createElement('div');
+            loadingMessage.className = 'message bot';
+            loadingMessage.innerHTML = `<p>Loading...</p>`;
+            chatBox.appendChild(loadingMessage);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch('/news', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword: userMessage.textContent.trim() })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                chatBox.removeChild(loadingMessage);
+
+                if (data.articles && data.articles.length > 0) {
+                    data.articles.forEach(article => {
+                        const articleDiv = document.createElement('div');
+                        articleDiv.className = 'message bot';
+                        articleDiv.innerHTML = `
+                            <h2>${article.title}</h2>
+                            <p>${article.description || 'No description available'}</p>
+                            <a href="${article.url}" target="_blank">Read more</a>
+                        `;
+                        chatBox.appendChild(articleDiv);
+                    });
+                } else {
+                    const noArticlesMessage = document.createElement('div');
+                    noArticlesMessage.className = 'message bot';
+                    noArticlesMessage.innerHTML = '<p>No articles found</p>';
+                    chatBox.appendChild(noArticlesMessage);
+                }
+            } catch (error) {
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'message bot';
+                errorMessage.innerHTML = '<p>Error fetching news. Please try again later.</p>';
+                chatBox.appendChild(errorMessage);
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
+</body>
+</html>
