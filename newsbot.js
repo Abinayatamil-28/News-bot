@@ -1,5 +1,3 @@
-// newsbot.js
-
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -29,6 +27,8 @@ async function fetchNews(keyword) {
 
 // Create an HTTP server
 const server = http.createServer(async (req, res) => {
+  console.log(`Received request: ${req.method} ${req.url}`); // Log the request method and URL
+
   if (req.method === 'GET' && req.url === '/') {
     // Serve the static HTML file
     fs.readFile(path.join(__dirname, 'public', 'index.html'), (err, data) => {
@@ -41,6 +41,7 @@ const server = http.createServer(async (req, res) => {
       res.end(data);
     });
   } else if (req.method === 'POST' && req.url === '/news') {
+    console.log('Handling /news route'); // Log when handling the /news route
     let body = '';
 
     req.on('data', chunk => {
